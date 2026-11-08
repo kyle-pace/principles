@@ -48,7 +48,7 @@ Use these unless the project's section says otherwise. **Do not add any other th
   - autocapture on, IP address tracking off, identity in `localStorage`
   - off under GPC, Do Not Track or the opt-out; only on the live domain
   - Session Replay only if the project wants it: a small sample (about 5%), conservative masking, and its code only loaded for sampled sessions
-  - custom event names in Title Case, past-tense verb first: "Clicked Resume", "Saved Recipe"
+  - custom events follow the naming rules under "Analytics events" below
 - **Backend: Firebase** (Auth, Firestore, Functions, Storage) when a project needs accounts or shared data.
   - Security rules deny by default and are locked down before anything ships.
   - Firebase Analytics stays off; Amplitude covers analytics.
@@ -57,6 +57,18 @@ Use these unless the project's section says otherwise. **Do not add any other th
 - **Apple apps:** native Swift and SwiftUI.
 - Put each outside service behind its own module (one file talks to Amplitude, one to Firebase), so switching tools means changing one file.
 - Keep running costs near zero: prefer static pages, free tiers and on-device work, and ask before adding anything that bills.
+
+### Analytics events
+
+Every project uses the same rules, so charts read the same way everywhere.
+
+- **Event names:** Title Case, past-tense verb first, then the object: "Saved Recipe", "Viewed Deal", "Completed Onboarding". Not "Recipe Saved" and not `save_recipe`. Use the same verb for the same action across projects (Viewed, Opened, Tapped, Added, Removed, Changed, Saved, Completed).
+- **Property names:** lowercase `snake_case` (`deal_id`, `stores_picked`). Keep names and values the same across events and projects when they mean the same thing.
+- Leave Amplitude's own `[Amplitude] …` events alone. Add custom events only for actions that answer a real product question; autocapture covers page views and clicks.
+- **One Amplitude project per product.** kylepace.dev and every experiment on it share the kylepace.dev project, so each experiment's custom events also send `experiment` with the project's slug (`experiment: "skill-tree"`).
+- **Tracking plan first:** add each new event to the project's tracking plan in Amplitude, with a description and category, when it ships. Nothing should arrive as "unexpected".
+- **Renaming an event:** rename it in code, then merge the old name into the new one in Amplitude so history stays connected. Don't rename in Amplitude alone.
+- **New product:** create its Amplitude project and add a row for it to the "All projects overview" dashboard. A new experiment on kylepace.dev needs neither: it appears there by page path.
 
 ### Self-host everything; approve outside hosts one at a time
 
