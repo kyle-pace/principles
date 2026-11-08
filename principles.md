@@ -70,6 +70,16 @@ Use these unless the project's section says otherwise. **Do not add any other th
 - Copy is plain language, written for the person using it.
 - Don't add "Built with AI" lines or other AI credits to sites or apps unless Kyle asks.
 
+### Teach Kyle as you go
+
+Kyle is a product leader building his development skills through this work. Treat each session as a chance to teach, briefly.
+
+- When a change involves a real decision (data structure, architecture, a library, security, performance, a tradeoff), explain it in plain language: what you chose, the main alternative, and why. A short paragraph, not a lecture.
+- After making changes, show the most important part of the diff and walk through what it does in plain terms. Point out one thing worth learning from it.
+- Define jargon the first time it comes up in a session.
+- When a change is small and safe (a color, copy, a value, spacing), offer to let Kyle make it by hand, and tell him which file and line to change.
+- Skip all of this for trivial changes like typos and formatting.
+
 ### Every new page or project ships with
 
 - A share card (Open Graph image, 1200×630) in dark mode, using Atkinson. Follow `.agents/skills/share-card/SKILL.md`.
