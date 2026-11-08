@@ -1,0 +1,44 @@
+# Reusable workflow: copies the principles and shared skills into the calling
+# project and commits them if anything changed. Projects call it from their own
+# .github/workflows/principles.yml (see template/).
+name: Sync principles
+
+on:
+  workflow_call:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/checkout@v5
+        with:
+          repository: kyle-pace/principles
+          path: .principles-src
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Copy the principles
+        run: |
+          node .principles-src/scripts/sync.mjs .
+          rm -rf .principles-src
+
+      - name: Commit changes
+        run: |
+          git add AGENTS.md .agents
+          if git diff --cached --quiet; then
+            echo "Principles already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync principles from kyle-pace/principles"
+          # Other workflows may have pushed since checkout.
+          git pull --rebase
+          git push

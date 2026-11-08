@@ -1,0 +1,12 @@
+# Hosts every project may load scripts, styles, fonts or images from.
+# Add project-specific hosts in the project instead (see README), not here.
+# "*.example.com" matches example.com and every subdomain.
+
+# Amplitude (analytics and Session Replay), if a project loads it from the CDN
+*.amplitude.com
+
+# Firebase (Auth, Firestore, Storage, Hosting)
+*.firebaseapp.com
+*.web.app
+*.firebasestorage.app
+firebasestorage.googleapis.com

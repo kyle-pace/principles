@@ -1,0 +1,61 @@
+# Reusable workflow: builds the calling project and runs the shared checks on
+# the output. Projects call it from their own .github/workflows/principles.yml.
+name: Principles checks
+
+on:
+  workflow_call:
+    inputs:
+      output-dir:
+        description: The folder the build writes the site to, e.g. dist or dist/client
+        required: true
+        type: string
+      build-command:
+        description: How to build the project
+        required: false
+        type: string
+        default: npm run build
+      install-command:
+        description: How to install dependencies
+        required: false
+        type: string
+        default: npm ci
+      node-version:
+        required: false
+        type: string
+        default: '22'
+      allow:
+        description: Extra hosts this project may load from, comma-separated (Kyle approves each one)
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  third-party:
+    name: Third-party check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install
+        run: ${{ inputs.install-command }}
+
+      - name: Build
+        run: ${{ inputs.build-command }}
+
+      - uses: actions/checkout@v5
+        with:
+          repository: kyle-pace/principles
+          path: .principles-src
+
+      - name: Check outside hosts
+        env:
+          OUTPUT_DIR: ${{ inputs.output-dir }}
+          ALLOW: ${{ inputs.allow }}
+        run: node .principles-src/checks/third-party.mjs "$OUTPUT_DIR" --allow "$ALLOW"

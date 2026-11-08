@@ -1,0 +1,17 @@
+# Hosts that always fail the check, even if a wildcard would allow them.
+
+# Font CDNs: self-host Atkinson instead
+fonts.googleapis.com
+fonts.gstatic.com
+use.typekit.net
+*.typekit.net
+fonts.bunny.net
+
+# Ad, tracking and tag-manager scripts
+*.googletagmanager.com
+*.google-analytics.com
+*.doubleclick.net
+connect.facebook.net
+*.facebook.com
+*.hotjar.com
+*.clarity.ms
