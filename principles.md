@@ -44,7 +44,7 @@ Accessibility is designed in from the first commit, not audited in at the end.
 
 Use these unless the project's section says otherwise. **Do not add any other third-party service, SDK, script, font or paid tool without asking Kyle first.**
 
-- **Product analytics: Amplitude**, set up the private way (see `src/lib/analytics.ts` in kylepace.net):
+- **Product analytics: Amplitude**, set up the private way (on the web, use `startAnalytics` from kp-design's `kp-design/analytics`, which does all of this):
   - autocapture on, IP address tracking off, identity in `localStorage`
   - off under GPC, Do Not Track or the opt-out; only on the live domain
   - Session Replay only if the project wants it: a small sample (about 5%), conservative masking, and its code only loaded for sampled sessions
@@ -53,6 +53,7 @@ Use these unless the project's section says otherwise. **Do not add any other th
   - Security rules deny by default and are locked down before anything ships.
   - Firebase Analytics stays off; Amplitude covers analytics.
 - **Web hosting: Cloudflare** (Workers with static assets). GitHub Pages is fine for a simple static site.
+- **Design system for Kyle's websites: [kp-design](https://github.com/kyle-pace/kp-design)**, installed from GitHub and pinned to a commit. It holds the tokens, self-hosted Atkinson, header, footer, display settings and analytics; projects on kylepace.dev use its `DevLayout`. Don't copy these into a project; change them in kp-design. (Apple apps don't use it.)
 - **Apple apps:** native Swift and SwiftUI.
 - Put each outside service behind its own module (one file talks to Amplitude, one to Firebase), so switching tools means changing one file.
 - Keep running costs near zero: prefer static pages, free tiers and on-device work, and ask before adding anything that bills.
