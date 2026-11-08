@@ -57,6 +57,12 @@ Use these unless the project's section says otherwise. **Do not add any other th
 - Put each outside service behind its own module (one file talks to Amplitude, one to Firebase), so switching tools means changing one file.
 - Keep running costs near zero: prefer static pages, free tiers and on-device work, and ask before adding anything that bills.
 
+### Self-host everything; approve outside hosts one at a time
+
+- Serve libraries, fonts and assets from the project itself. Install them from npm and bundle them, or keep a pinned copy in the repo (for example in `vendor/`) with a script that refreshes it. Never load them from a CDN like jsDelivr, unpkg or cdnjs.
+- If a project needs something from an outside host (cover images from a book API, say), ask Kyle. Approvals are per project and per host. Once he approves, add the host to that project's `.agents/allowed-hosts.txt` with a comment saying what it's for and the date he approved it.
+- This applies to hosts that JavaScript calls at runtime too (images, APIs), even though the CI check only sees HTML and CSS. List those in the same file.
+
 ### How things get built
 
 - Static and simple by default. Add JavaScript, servers or dependencies only where they earn it.
@@ -75,4 +81,4 @@ Use these unless the project's section says otherwise. **Do not add any other th
 - The build passes, and so do any tests and linters.
 - Run an accessibility check on what changed (axe on the web, Accessibility Inspector on Apple platforms), fix what it finds, and tab through new UI with the keyboard.
 - Look at it in both light and dark mode, and at a narrow phone width.
-- CI runs a third-party check that fails if a page loads scripts, styles, fonts or images from a host that isn't on the allowlist. Don't add a host to get past it; ask Kyle.
+- CI runs a third-party check that fails if a page loads scripts, styles, fonts or images from a host that isn't allowed. Don't add a host to get past it; ask Kyle.

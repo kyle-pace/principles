@@ -38,6 +38,15 @@ No tokens or secrets are needed: this repo is public, and each project commits t
 
 ## When the check fails
 
-It names each host and the files that load from it. The fix is almost always to self-host the file (fonts through `@fontsource`, libraries through npm). If a host really is needed and Kyle agrees, add it to that project's `allow:` list in its workflow. Only add it to `checks/allowed-hosts.txt` if every project should be able to use it.
+It names each host and the files that load from it. The fix is almost always to self-host the file: fonts through `@fontsource`, libraries through npm or a pinned copy in `vendor/` (see `scripts/update-vendor.sh` in cuisine-explorer for an example).
 
-The check reads built HTML and CSS. Requests made from JavaScript at runtime (analytics, API calls) aren't covered; the principles keep those in one module per service, so they're easy to review.
+If a host really is needed, Kyle approves it for that one project, and it goes in the project's `.agents/allowed-hosts.txt`, one host per line with a note:
+
+```
+# Cookbook cover images on cuisine pages. Approved by Kyle, 2026-11-08.
+covers.openlibrary.org
+```
+
+The check picks that file up automatically. Only add a host to `checks/allowed-hosts.txt` here if every project should be able to use it.
+
+The check reads HTML and CSS. Hosts that JavaScript calls at runtime (images, APIs) aren't covered automatically, but they still need Kyle's approval and still go in the same file, so it stays the full list of what a project talks to.

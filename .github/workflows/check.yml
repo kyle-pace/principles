@@ -10,12 +10,12 @@ on:
         required: true
         type: string
       build-command:
-        description: How to build the project
+        description: How to build the project (empty to skip, for sites with no build)
         required: false
         type: string
         default: npm run build
       install-command:
-        description: How to install dependencies
+        description: How to install dependencies (empty to skip)
         required: false
         type: string
         default: npm ci
@@ -24,7 +24,7 @@ on:
         type: string
         default: '22'
       allow:
-        description: Extra hosts this project may load from, comma-separated (Kyle approves each one)
+        description: Extra hosts, comma-separated. Prefer listing them in .agents/allowed-hosts.txt with a note.
         required: false
         type: string
         default: ''
@@ -44,9 +44,11 @@ jobs:
           node-version: ${{ inputs.node-version }}
 
       - name: Install
+        if: inputs.install-command != ''
         run: ${{ inputs.install-command }}
 
       - name: Build
+        if: inputs.build-command != ''
         run: ${{ inputs.build-command }}
 
       - uses: actions/checkout@v5
@@ -58,4 +60,8 @@ jobs:
         env:
           OUTPUT_DIR: ${{ inputs.output-dir }}
           ALLOW: ${{ inputs.allow }}
-        run: node .principles-src/checks/third-party.mjs "$OUTPUT_DIR" --allow "$ALLOW"
+        run: |
+          # Hosts Kyle approved for this project, one per line with a note.
+          approved=()
+          [ -f .agents/allowed-hosts.txt ] && approved=(--allow-file .agents/allowed-hosts.txt)
+          node .principles-src/checks/third-party.mjs "$OUTPUT_DIR" --allow "$ALLOW" "${approved[@]}"
