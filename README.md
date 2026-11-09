@@ -40,7 +40,7 @@ No tokens or secrets are needed: this repo is public, and each project commits t
 
 It names each host and the files that load from it. The fix is almost always to self-host the file: fonts through `@fontsource`, libraries through npm or a pinned copy in `vendor/` (see `scripts/update-vendor.sh` in cuisine-explorer for an example).
 
-If a host really is needed, Kyle approves it for that one project, and it goes in the project's `.agents/allowed-hosts.txt`, one host per line with a note:
+If a host really is needed, Kyle approves it for that one project, and it goes in the project's `.agents/allowed-hosts.txt`, one host per line with a note. Image hosts for the content being shown (a recipe site's own photos, say) can be added without asking, loaded with no referrer, as long as the note says why and Kyle hears about it (see "Self-host everything" in `principles.md`):
 
 ```
 # Cookbook cover images on cuisine pages. Approved by Kyle, 2026-11-08.
