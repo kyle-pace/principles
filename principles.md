@@ -23,6 +23,14 @@ Accessibility is designed in from the first commit, not audited in at the end.
 - Respect user settings: reduced motion, light/dark preference, text zoom to 200% without breaking layout. On Apple platforms: Dynamic Type, VoiceOver labels and hints, Reduce Motion, Increase Contrast.
 - Motion is short (under 300 ms for interface animation), never `ease-in`, and on the web only runs inside `@media (prefers-reduced-motion: no-preference)`.
 
+### Every screen size from day one
+
+Layouts are designed for phones, tablets and big screens from the first commit, not stretched or squeezed in later.
+
+- **Apps** are built for both phone and tablet from day one. On Apple platforms that means one universal iPhone and iPad app: support every orientation, iPad multitasking (Split View, Slide Over, Stage Manager) and resizable windows. Use size classes and adaptive SwiftUI layouts (`NavigationSplitView`, `ViewThatFits`, grids) so iPad gets a layout that uses the space, not a blown-up phone screen.
+- **Web projects** are fully responsive: mobile first, fluid from 320 px wide up to large desktop monitors. No sideways scrolling at 320 px. Cap line length for reading (about 70 characters), and let wider screens add columns instead of stretching text.
+- Prefer fluid layouts (flexbox, grid, `clamp()`, container queries) over many fixed breakpoints. Handle touch, mouse and keyboard on every size, and respect safe areas and notches.
+
 ### Type
 
 - Atkinson Hyperlegible Next for all text and Atkinson Hyperlegible Mono for code, in every product.
@@ -111,5 +119,5 @@ Kyle is a product leader building his development skills through this work. Trea
 
 - The build passes, and so do any tests and linters.
 - Run an accessibility check on what changed (axe on the web, Accessibility Inspector on Apple platforms), fix what it finds, and tab through new UI with the keyboard.
-- Look at it in both light and dark mode, and at a narrow phone width.
+- Look at it in both light and dark mode at phone, tablet and desktop sizes: on the web at least 320, 768, 1280 and 1920 px wide; for Apple apps on the smallest iPhone, a large iPhone and an iPad in both orientations and in Split View.
 - CI runs a third-party check that fails if a page loads scripts, styles, fonts or images from a host that isn't allowed. Don't add a host just to get past it: ask Kyle, or for a content image follow the image rule above.

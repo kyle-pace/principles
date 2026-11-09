@@ -2,7 +2,7 @@
 
 How Kyle builds things, written for whichever coding agent is doing the work: Claude Code, Codex, Cursor, Copilot or anything else that reads [AGENTS.md](https://agents.md).
 
-The short version: accessibility first, privacy right behind it, Atkinson Hyperlegible everywhere, a small default stack (Amplitude, Firebase, Cloudflare), and nothing third-party without asking. The full text is [`principles.md`](principles.md).
+The short version: accessibility first, privacy right behind it, every screen size from day one, Atkinson Hyperlegible everywhere, a small default stack (Amplitude, Firebase, Cloudflare), and nothing third-party without asking. The full text is [`principles.md`](principles.md).
 
 ## What's here
 
