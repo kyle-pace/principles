@@ -11,6 +11,7 @@ The short version: accessibility first, privacy right behind it, every screen si
 | `principles.md` | The principles. This is the one file to edit. Lines and sections can be marked web-only or Apple-only (see below). |
 | `skills/` | Shared skills, copied into each project's `.agents/skills/`: `share-card` (the dark-mode Open Graph image every new page gets), `page-check` (the `npm run check` command: axe, sideways scrolling, JavaScript weight, screenshots) and `bump-kp-design` (rolling a design system change out to every site). `skills/platforms.json` says which platforms each one is for. |
 | `checks/third-party.mjs` | Fails if a built page loads scripts, styles, fonts or images from a host that isn't allowed. Lists live in `checks/allowed-hosts.txt` and `checks/blocked-hosts.txt`. |
+| `checks/stack.mjs` | Fails if a site or app has no Amplitude, if Firebase Analytics is included, if a Firebase config file is for a bundle ID the app doesn't have, or if Firestore rules are open. A project with a real reason to have no analytics says so in `.agents/stack.json`. |
 | `scripts/sync.mjs` | Copies the principles into a project's `AGENTS.md` and the skills into `.agents/skills/`, keeping only what applies to the project's platforms. |
 | `.github/workflows/` | Reusable workflows projects call: `sync.yml` and `check.yml`. |
 | `template/` | The one file a project needs to opt in. |
@@ -21,13 +22,13 @@ Agents only read files inside the repo they're working in, so each project keeps
 
 1. Edit `principles.md` here and push.
 2. Each project's `Principles` workflow runs daily (or on demand from its Actions tab), pulls this repo, and rewrites the block between the `BEGIN principles` and `END principles` markers in its `AGENTS.md`. Everything outside the markers belongs to the project and is never touched.
-3. On every push and pull request, the same workflow builds the project, runs the third-party check, and runs the project's own `npm run check` if it has one.
+3. On every push and pull request, the same workflow builds the project, runs the third-party check and the stack check, and runs the project's own `npm run check` if it has one.
 
 No tokens or secrets are needed: this repo is public, and each project commits to itself with its own built-in token.
 
 ## Adding a project
 
-1. Copy `template/.github/workflows/principles.yml` into the project and set `output-dir` to wherever its build writes the site. For an app with no web build, delete the `checks` job.
+1. Copy `template/.github/workflows/principles.yml` into the project and set `output-dir` to wherever its build writes the site. For an app with no website, leave `output-dir` out and set `install-command` and `build-command` to `''`: it gets the stack check alone.
 2. Run the sync once, either from the project's Actions tab or locally:
    ```sh
    git clone https://github.com/kyle-pace/principles /tmp/principles

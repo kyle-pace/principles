@@ -1,15 +1,25 @@
-# Reusable workflow: builds the calling project, runs the shared third-party
-# check on the output, then runs the project's own check command if it has one
-# (a "check" script in package.json: axe, sideways scrolling, screenshots). Projects call it from their own .github/workflows/principles.yml.
+# Reusable workflow: builds the calling project, then runs
+#   1. the third-party check on the built site (outside hosts)
+#   2. the stack check (Amplitude in, Firebase Analytics out, Firebase config matches)
+#   3. the project's own check command if it has one (a "check" script in
+#      package.json: axe, sideways scrolling, JavaScript weight, screenshots)
+# An app with no website leaves output-dir, install-command and build-command
+# empty and gets the stack check alone. Projects call it from their own .github/workflows/principles.yml.
 name: Principles checks
 
 on:
   workflow_call:
     inputs:
       output-dir:
-        description: The folder the build writes the site to, e.g. dist or dist/client
-        required: true
+        description: The folder the build writes the site to, e.g. dist or dist/client. Leave empty for a project with no website.
+        required: false
         type: string
+        default: ''
+      check-script:
+        description: The package.json script that runs the page check, if it isn't called "check"
+        required: false
+        type: string
+        default: check
       build-command:
         description: How to build the project (empty to skip, for sites with no build)
         required: false
@@ -58,6 +68,7 @@ jobs:
           path: .principles-src
 
       - name: Check outside hosts
+        if: inputs.output-dir != ''
         env:
           OUTPUT_DIR: ${{ inputs.output-dir }}
           ALLOW: ${{ inputs.allow }}
@@ -71,11 +82,14 @@ jobs:
       # principles. Projects without a "check" script skip these steps.
       - name: Look for a check command
         id: project-check
+        if: inputs.output-dir != ''
+        env:
+          CHECK_SCRIPT: ${{ inputs.check-script }}
         run: |
-          if [ -f package.json ] && node -e "process.exit(require('./package.json').scripts?.check ? 0 : 1)"; then
+          if [ -f package.json ] && SCRIPT="$CHECK_SCRIPT" node -e "process.exit(require('./package.json').scripts?.[process.env.SCRIPT] ? 0 : 1)"; then
             echo "found=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No check script in package.json; skipping."
+            echo "No $CHECK_SCRIPT script in package.json; skipping."
           fi
 
       - name: Install a browser for the check
@@ -84,7 +98,19 @@ jobs:
 
       - name: Run the project's check
         if: steps.project-check.outputs.found == 'true'
-        run: npm run check
+        env:
+          CHECK_SCRIPT: ${{ inputs.check-script }}
+        run: npm run "$CHECK_SCRIPT"
+
+      - name: Check the stack (Amplitude and Firebase)
+        if: always()
+        env:
+          OUTPUT_DIR: ${{ inputs.output-dir }}
+        run: |
+          [ -d .principles-src ] || { echo "The principles weren't checked out; an earlier step failed."; exit 1; }
+          built=()
+          [ -n "$OUTPUT_DIR" ] && built=(--output-dir "$OUTPUT_DIR")
+          node .principles-src/checks/stack.mjs . "${built[@]}"
 
       - name: Keep the screenshots
         if: always() && steps.project-check.outputs.found == 'true'
