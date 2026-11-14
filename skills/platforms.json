@@ -1,5 +1,14 @@
 {
-  "share-card": ["web"],
-  "page-check": ["web"],
-  "bump-kp-design": ["web"]
+  "share-card": [
+    "web"
+  ],
+  "page-check": [
+    "web"
+  ],
+  "bump-kp-design": [
+    "web"
+  ],
+  "about-page": [
+    "web"
+  ]
 }

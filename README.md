@@ -9,7 +9,7 @@ The short version: accessibility first, privacy right behind it, every screen si
 | Path | What it is |
 | --- | --- |
 | `principles.md` | The principles. This is the one file to edit. Lines and sections can be marked web-only or Apple-only (see below). |
-| `skills/` | Shared skills, copied into each project's `.agents/skills/`: `share-card` (the dark-mode Open Graph image every new page gets), `page-check` (the `npm run check` command: axe, sideways scrolling, JavaScript weight, screenshots) and `bump-kp-design` (rolling a design system change out to every site). `skills/platforms.json` says which platforms each one is for. |
+| `skills/` | Shared skills, copied into each project's `.agents/skills/`: `share-card` (the dark-mode Open Graph image every new page gets), `page-check` (the `npm run check` command: axe, sideways scrolling, JavaScript weight, screenshots) `bump-kp-design` (rolling a design system change out to every site) and `about-page` (the standard headings and step format for About pages). `skills/platforms.json` says which platforms each one is for. |
 | `checks/third-party.mjs` | Fails if a built page loads scripts, styles, fonts or images from a host that isn't allowed. Lists live in `checks/allowed-hosts.txt` and `checks/blocked-hosts.txt`. |
 | `checks/stack.mjs` | Fails if a site or app has no Amplitude, if Firebase Analytics is included, if a Firebase config file is for a bundle ID the app doesn't have, or if Firestore rules are open. A project with a real reason to have no analytics says so in `.agents/stack.json`. |
 | `scripts/sync.mjs` | Copies the principles into a project's `AGENTS.md` and the skills into `.agents/skills/`, keeping only what applies to the project's platforms. |
