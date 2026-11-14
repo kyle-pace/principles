@@ -8,10 +8,10 @@ The short version: accessibility first, privacy right behind it, every screen si
 
 | Path | What it is |
 | --- | --- |
-| `principles.md` | The principles. This is the one file to edit. |
-| `skills/` | Shared skills, copied into each project's `.agents/skills/`. Right now: `share-card` (the dark-mode Open Graph image every new page gets). |
+| `principles.md` | The principles. This is the one file to edit. Lines and sections can be marked web-only or Apple-only (see below). |
+| `skills/` | Shared skills, copied into each project's `.agents/skills/`: `share-card` (the dark-mode Open Graph image every new page gets), `page-check` (the `npm run check` command: axe, sideways scrolling, JavaScript weight, screenshots) and `bump-kp-design` (rolling a design system change out to every site). `skills/platforms.json` says which platforms each one is for. |
 | `checks/third-party.mjs` | Fails if a built page loads scripts, styles, fonts or images from a host that isn't allowed. Lists live in `checks/allowed-hosts.txt` and `checks/blocked-hosts.txt`. |
-| `scripts/sync.mjs` | Copies the principles into a project's `AGENTS.md` and the skills into `.agents/skills/`. |
+| `scripts/sync.mjs` | Copies the principles into a project's `AGENTS.md` and the skills into `.agents/skills/`, keeping only what applies to the project's platforms. |
 | `.github/workflows/` | Reusable workflows projects call: `sync.yml` and `check.yml`. |
 | `template/` | The one file a project needs to opt in. |
 
@@ -21,7 +21,7 @@ Agents only read files inside the repo they're working in, so each project keeps
 
 1. Edit `principles.md` here and push.
 2. Each project's `Principles` workflow runs daily (or on demand from its Actions tab), pulls this repo, and rewrites the block between the `BEGIN principles` and `END principles` markers in its `AGENTS.md`. Everything outside the markers belongs to the project and is never touched.
-3. On every push and pull request, the same workflow builds the project and runs the third-party check.
+3. On every push and pull request, the same workflow builds the project, runs the third-party check, and runs the project's own `npm run check` if it has one.
 
 No tokens or secrets are needed: this repo is public, and each project commits to itself with its own built-in token.
 
@@ -31,12 +31,32 @@ No tokens or secrets are needed: this repo is public, and each project commits t
 2. Run the sync once, either from the project's Actions tab or locally:
    ```sh
    git clone https://github.com/kyle-pace/principles /tmp/principles
-   node /tmp/principles/scripts/sync.mjs .
+   node /tmp/principles/scripts/sync.mjs . --platforms web
    ```
-3. Fill in the `## This project` section of `AGENTS.md`: what it is, how to build and test it, and anything that overrides a default.
-4. If the project has a `CLAUDE.md`, make it a single line, `@AGENTS.md`, and move anything else in it into `AGENTS.md`. When both files exist, Claude Code reads only `CLAUDE.md`, so the import is what makes it see the principles.
+   Use `web`, `apple` or `web,apple`. The choice is saved in the first line of the principles block in `AGENTS.md`, so the daily sync keeps it. Leave the flag off and the project gets everything.
+3. For a website, set up the check command: follow `.agents/skills/page-check/SKILL.md`.
+4. Fill in the `## This project` section of `AGENTS.md`: what it is, how to build and test it, and anything that overrides a default.
+5. If the project has a `CLAUDE.md`, make it a single line, `@AGENTS.md`, and move anything else in it into `AGENTS.md`. When both files exist, Claude Code reads only `CLAUDE.md`, so the import is what makes it see the principles.
 
-## When the check fails
+## Web-only and Apple-only rules
+
+A website doesn't need the SwiftUI rules and an app doesn't need the CSS ones, so `principles.md` marks what's specific to a platform, and the sync leaves out what a project doesn't need:
+
+```md
+- A rule for everyone.
+- A rule only websites get. <!-- web -->
+- A rule only Apple apps get. <!-- apple -->
+
+<!-- apple -->
+
+### A whole section only Apple apps get
+
+<!-- /apple -->
+```
+
+A mark at the end of a line covers that line. A mark on a line of its own covers everything up to its closing mark. The marks are HTML comments, so they don't show when the file is read on GitHub or on kylepace.dev's How I build page, which shows the whole thing.
+
+## When the third-party check fails
 
 It names each host and the files that load from it. The fix is almost always to self-host the file: fonts through `@fontsource`, libraries through npm or a pinned copy in `vendor/` (see `scripts/update-vendor.sh` in cuisine-explorer for an example).
 

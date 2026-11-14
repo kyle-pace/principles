@@ -1,5 +1,6 @@
-# Reusable workflow: builds the calling project and runs the shared checks on
-# the output. Projects call it from their own .github/workflows/principles.yml.
+# Reusable workflow: builds the calling project, runs the shared third-party
+# check on the output, then runs the project's own check command if it has one
+# (a "check" script in package.json: axe, sideways scrolling, screenshots). Projects call it from their own .github/workflows/principles.yml.
 name: Principles checks
 
 on:
@@ -65,3 +66,32 @@ jobs:
           approved=()
           [ -f .agents/allowed-hosts.txt ] && approved=(--allow-file .agents/allowed-hosts.txt)
           node .principles-src/checks/third-party.mjs "$OUTPUT_DIR" --allow "$ALLOW" "${approved[@]}"
+
+      # The project's own check command, from "Before you call it done" in the
+      # principles. Projects without a "check" script skip these steps.
+      - name: Look for a check command
+        id: project-check
+        run: |
+          if [ -f package.json ] && node -e "process.exit(require('./package.json').scripts?.check ? 0 : 1)"; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No check script in package.json; skipping."
+          fi
+
+      - name: Install a browser for the check
+        if: steps.project-check.outputs.found == 'true' && hashFiles('node_modules/playwright/package.json') != ''
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the project's check
+        if: steps.project-check.outputs.found == 'true'
+        run: npm run check
+
+      - name: Keep the screenshots
+        if: always() && steps.project-check.outputs.found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-screenshots
+          path: .check/
+          if-no-files-found: ignore
+          retention-days: 7
+          include-hidden-files: true
