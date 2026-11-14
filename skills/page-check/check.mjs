@@ -54,11 +54,16 @@ if (!existsSync(dist)) {
   process.exit(2);
 }
 
-// Every built page: each folder with an index.html, plus the 404 page.
+// Every built page: each folder's index.html as the folder's address, and any
+// other .html file (404.html, or privacy.html on a hand-written site) by name.
 function findPages(dir, route = '/') {
   const pages = [];
-  if (existsSync(join(dir, 'index.html'))) pages.push(route);
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+  const entries = readdirSync(dir, { withFileTypes: true });
+  if (entries.some((entry) => entry.name === 'index.html')) pages.push(route);
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith('.html') && entry.name !== 'index.html') pages.push(route + entry.name);
+  }
+  for (const entry of entries) {
     if (entry.isDirectory() && !/^[_.]|^node_modules$/.test(entry.name)) {
       pages.push(...findPages(join(dir, entry.name), `${route}${entry.name}/`));
     }
@@ -66,7 +71,6 @@ function findPages(dir, route = '/') {
   return pages;
 }
 let pages = findPages(dist);
-if (existsSync(join(dist, '404.html'))) pages.push('/404.html');
 if (only) pages = pages.filter((page) => only.includes(page));
 if (!pages.length) {
   console.error(`No pages to check in ${dist}. Build the project first, or pass --dir.`);
@@ -144,6 +148,7 @@ if (shots) {
 
 const problems = [];
 const notes = [];
+let waitForQuiet = true;
 const name = (page) => (page === '/' ? 'home' : page.replace(/^\/|\/$|\.html$/g, '').replace(/\//g, '-'));
 
 for (const page of pages) {
@@ -157,10 +162,18 @@ for (const page of pages) {
     const tab = await context.newPage();
     for (const width of WIDTHS) {
       await tab.setViewportSize({ width, height: 900 });
-      // Pages that keep talking to a server (live data) never go quiet; settle for loaded.
-      await tab
-        .goto(origin + page, { waitUntil: 'networkidle', timeout: 20_000 })
-        .catch(() => tab.goto(origin + page, { waitUntil: 'load' }));
+      // Wait for the network to go quiet. A site that keeps talking to a server (live
+      // data) never does, so after the first time that happens, settle for loaded plus a
+      // moment, instead of waiting out the clock on every page.
+      if (waitForQuiet) {
+        await tab.goto(origin + page, { waitUntil: 'networkidle', timeout: 15_000 }).catch(async () => {
+          waitForQuiet = false;
+          await tab.goto(origin + page, { waitUntil: 'load' });
+        });
+      } else {
+        await tab.goto(origin + page, { waitUntil: 'load' });
+        await tab.waitForTimeout(500);
+      }
 
       const overflow = await tab.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
