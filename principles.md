@@ -99,6 +99,15 @@ Every project uses the same rules, so charts read the same way everywhere.
 - Copy is plain language, written for the person using it.
 - Don't add "Built with AI" lines or other AI credits to sites or apps unless Kyle asks.
 
+### App builds: two channels, both TestFlight
+
+- **Internal TestFlight** is the main channel: every build worth trying on a device goes there. Before an app has a public beta, it is the only channel.
+- **Public TestFlight** is added once the app is ready for other people. A public build comes from a commit that has already run on internal.
+- After the App Store release the same two stay; the release is chosen from builds the public beta has run.
+- Don't install builds straight onto Kyle's devices as a routine. A direct "Dev" install is a tool for when TestFlight can't do the job: debugging on the device, something only the developer menu or a development build can do, an OS beta the cloud build can't target, or a quick loop Kyle asks for. Say why when you do one, and don't treat the Dev app as up to date.
+- Before sending a build to TestFlight, build and run it on the Mac's iPhone and iPad simulators. Cloud build hours are shared across all the apps; don't spend them finding compile errors.
+- The project's section says how to cut each kind of build.
+
 ### Teach Kyle as you go
 
 Kyle is a product leader building his development skills through this work. Treat each session as a chance to teach, briefly.
