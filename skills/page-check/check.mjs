@@ -17,6 +17,9 @@
 //   --pages /apps/,/labs/ only these pages
 //   --js-budget 400       a different JavaScript budget in KB, for a project whose section
 //                         of AGENTS.md says it needs one (a map, a globe)
+//   --sample 3            where a folder holds many pages from one template (every store,
+//                         every week), check only 3 of them: the first, the last and
+//                         the middle. For big sites, so the check stays quick.
 //   --no-shots            skip the screenshots
 //   CHROME=/path/to/chrome uses that browser instead of Playwright's own.
 //
@@ -71,6 +74,28 @@ function findPages(dir, route = '/') {
   return pages;
 }
 let pages = findPages(dist);
+
+// --sample N: pages that sit side by side in one folder are almost always one template,
+// so past N of them, keep an even spread that includes the first and the last.
+const sample = Number(option('--sample') ?? 0);
+let sampledOut = 0;
+if (sample > 0) {
+  const groups = new Map();
+  for (const page of pages) {
+    const parent = page.replace(/[^/]+\/?$/, '');
+    groups.set(parent, [...(groups.get(parent) ?? []), page]);
+  }
+  const keep = new Set();
+  for (const [parent, group] of groups) {
+    const siblings = group.filter((page) => page !== parent).sort();
+    if (group.includes(parent)) keep.add(parent);
+    // The site's top-level pages are each their own thing; never sample those.
+    if (parent === '/' || siblings.length <= sample) siblings.forEach((page) => keep.add(page));
+    else for (let i = 0; i < sample; i++) keep.add(siblings[Math.round((i * (siblings.length - 1)) / Math.max(sample - 1, 1))]);
+  }
+  sampledOut = pages.length - keep.size;
+  pages = pages.filter((page) => keep.has(page));
+}
 if (only) pages = pages.filter((page) => only.includes(page));
 if (!pages.length) {
   console.error(`No pages to check in ${dist}. Build the project first, or pass --dir.`);
@@ -213,6 +238,7 @@ await browser.close();
 server.close();
 
 if (shots) console.log(`\nScreenshots are in .check/ (${pages.length * WIDTHS.length * THEMES.length} files).`);
+if (sampledOut) notes.push(`${sampledOut} page(s) left out by --sample ${sample}`);
 if (notes.length) console.log(`\nNot checked:\n` + notes.map((note) => `  - ${note}`).join('\n'));
 if (problems.length) {
   const unique = [...new Set(problems)];
