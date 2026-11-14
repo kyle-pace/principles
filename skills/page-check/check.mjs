@@ -13,7 +13,7 @@
 // The screenshots are for looking at; the first three fail the run.
 //
 // Usage: node .agents/skills/page-check/check.mjs [options]
-//   --dir dist/client     where the build is (default: dist/client, else dist, else _site, else .)
+//   --dir dist/client     where the build is (default: the first of dist/client, dist, _site that exists, else .)
 //   --pages /apps/,/labs/ only these pages
 //   --js-budget 400       a different JavaScript budget in KB, for a project whose section
 //                         of AGENTS.md says it needs one (a map, a globe)
@@ -36,7 +36,7 @@ const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : n
 
 const dist = join(
   root,
-  option('--dir') ?? ['dist/client', 'dist', '_site'].find((dir) => existsSync(join(root, dir, 'index.html'))) ?? '.',
+  option('--dir') ?? ['dist/client', 'dist', '_site'].find((dir) => existsSync(join(root, dir))) ?? '.',
 );
 const out = join(root, '.check');
 
@@ -49,7 +49,7 @@ const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const only = option('--pages')?.split(',') ?? null;
 const shots = !args.includes('--no-shots');
 
-if (!existsSync(join(dist, 'index.html'))) {
+if (!existsSync(dist)) {
   console.error(`No built site in ${dist}. Build the project first, or pass --dir.`);
   process.exit(2);
 }
@@ -69,7 +69,7 @@ let pages = findPages(dist);
 if (existsSync(join(dist, '404.html'))) pages.push('/404.html');
 if (only) pages = pages.filter((page) => only.includes(page));
 if (!pages.length) {
-  console.error('No pages to check.');
+  console.error(`No pages to check in ${dist}. Build the project first, or pass --dir.`);
   process.exit(2);
 }
 
@@ -131,7 +131,11 @@ function scriptWeight(page) {
 }
 
 const axeSource = readFileSync(createRequire(join(root, 'package.json')).resolve('axe-core/axe.min.js'), 'utf8');
-const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
+const browser = await chromium.launch({
+  ...(process.env.CHROME ? { executablePath: process.env.CHROME } : {}),
+  // Software rendering, so pages that draw with WebGL (a globe, a map) still paint.
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+});
 
 if (shots) {
   rmSync(out, { recursive: true, force: true });
@@ -139,6 +143,7 @@ if (shots) {
 }
 
 const problems = [];
+const notes = [];
 const name = (page) => (page === '/' ? 'home' : page.replace(/^\/|\/$|\.html$/g, '').replace(/\//g, '-'));
 
 for (const page of pages) {
@@ -152,7 +157,10 @@ for (const page of pages) {
     const tab = await context.newPage();
     for (const width of WIDTHS) {
       await tab.setViewportSize({ width, height: 900 });
-      await tab.goto(origin + page, { waitUntil: 'networkidle' });
+      // Pages that keep talking to a server (live data) never go quiet; settle for loaded.
+      await tab
+        .goto(origin + page, { waitUntil: 'networkidle', timeout: 20_000 })
+        .catch(() => tab.goto(origin + page, { waitUntil: 'load' }));
 
       const overflow = await tab.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -177,7 +185,10 @@ for (const page of pages) {
       }
 
       if (shots) {
-        await tab.screenshot({ path: join(out, `${name(page)}-${width}-${theme}.png`), fullPage: true });
+        // A page that never stops animating can time a screenshot out. That's worth knowing, not failing on.
+        await tab
+          .screenshot({ path: join(out, `${name(page)}-${width}-${theme}.png`), fullPage: true, timeout: 15_000 })
+          .catch(() => notes.push(`${page}: no screenshot at ${width}px (${theme}); look at this one by hand`));
       }
     }
     await context.close();
@@ -189,6 +200,7 @@ await browser.close();
 server.close();
 
 if (shots) console.log(`\nScreenshots are in .check/ (${pages.length * WIDTHS.length * THEMES.length} files).`);
+if (notes.length) console.log(`\nNot checked:\n` + notes.map((note) => `  - ${note}`).join('\n'));
 if (problems.length) {
   const unique = [...new Set(problems)];
   console.error(`\n${unique.length} problem(s):\n` + unique.map((problem) => `  - ${problem}`).join('\n'));
