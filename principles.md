@@ -187,6 +187,16 @@ Kyle is a product leader building his development skills through this work. Trea
 - A real name, icon and App Store description. <!-- apple -->
 - A privacy note if it collects anything.
 
+A new website on its own domain also gets set up so search engines can find it, as part of launch, not later: <!-- web -->
+
+- A home page title that says what the site is and who it's for ("Henwood: pantry and recipes app for iPhone, iPad and Mac"), not just the name. <!-- web -->
+- `robots.txt` that points to a sitemap, and a sitemap that lists every page meant to be found. Astro sites use `@astrojs/sitemap`; a hand-written site keeps `sitemap.xml` by hand and adds each new page to it. <!-- web -->
+- Structured data (JSON-LD) on the home page: `WebSite` for every site, `MobileApplication` with the store or TestFlight link for an app's site, and Kyle's `Person` (`@id` `https://kylepace.net/#kyle`) on his personal sites. <!-- web -->
+- A Google Search Console domain property, with the sitemap submitted there. Verifying the domain adds a DNS record, so ask Kyle first (see "Shipping"). <!-- web -->
+- The site imported into [Bing Webmaster Tools](https://www.bing.com/webmasters) from Search Console, which also covers DuckDuckGo. Bing only brings in sitemaps already submitted to Google, so do Search Console first. <!-- web -->
+- A few days after launch, check Search Console's Pages report and fix anything it says it couldn't crawl. <!-- web -->
+- Changing a favicon later? Give the new file a new name (`favicon-v2.png`), because Google keeps showing the old one for weeks otherwise. <!-- web -->
+
 ### Before you call it done
 
 Match the checking to the change. If you're unsure which tier a change is, use the higher one. In your report, say which tier you used and what you ran.
