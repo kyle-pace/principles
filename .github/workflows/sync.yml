@@ -31,7 +31,13 @@ jobs:
 
       - name: Commit changes
         run: |
-          git add AGENTS.md .agents
+          git add AGENTS.md
+          # Projects that get no shared skills (Apple-only apps, since every
+          # skill is web-only) have no .agents folder, and git add fails on a
+          # path that doesn't exist. Stage it only when it's there or tracked.
+          if [ -e .agents ] || [ -n "$(git ls-files .agents)" ]; then
+            git add --all .agents
+          fi
           if git diff --cached --quiet; then
             echo "Principles already up to date."
             exit 0
