@@ -112,12 +112,14 @@ jobs:
           [ -n "$OUTPUT_DIR" ] && built=(--output-dir "$OUTPUT_DIR")
           node .principles-src/checks/stack.mjs . "${built[@]}"
 
+      # Only when a check fails, and only for a day: each upload is ~120 MB
+      # and counts against the account's 0.5 GB Actions storage.
       - name: Keep the screenshots
-        if: always() && steps.project-check.outputs.found == 'true'
+        if: failure() && steps.project-check.outputs.found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: check-screenshots
           path: .check/
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 1
           include-hidden-files: true
